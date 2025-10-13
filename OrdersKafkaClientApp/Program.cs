@@ -20,6 +20,8 @@ namespace OrdersKafkaClientApp
 
             var app = builder.Build();
 
+            app.MapGet("/env", (IHostEnvironment env) => new { env.EnvironmentName });
+
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
