@@ -1,9 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.14.36414.22 d17.14
+VisualStudioVersion = 17.14.36414.22
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OrdersKafkaClientApp", "OrdersKafkaClientApp\OrdersKafkaClientApp.csproj", "{34AFB8FD-2D65-4ABF-AE99-F5807F985054}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OrdersKafkaWebApp", "OrdersKafkaWebApp\OrdersKafkaWebApp.csproj", "{EDDD031D-3A2F-48DE-B753-C9E44464DFBE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{34AFB8FD-2D65-4ABF-AE99-F5807F985054}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{34AFB8FD-2D65-4ABF-AE99-F5807F985054}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{34AFB8FD-2D65-4ABF-AE99-F5807F985054}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EDDD031D-3A2F-48DE-B753-C9E44464DFBE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EDDD031D-3A2F-48DE-B753-C9E44464DFBE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EDDD031D-3A2F-48DE-B753-C9E44464DFBE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EDDD031D-3A2F-48DE-B753-C9E44464DFBE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
