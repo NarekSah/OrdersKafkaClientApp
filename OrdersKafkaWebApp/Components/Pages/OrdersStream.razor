@@ -1,0 +1,118 @@
+@page "/orders-stream"
+
+@using OrdersKafkaClientApp
+
+<PageTitle>Orders Stream</PageTitle>
+
+<h3>Orders Stream</h3>
+
+<p>
+    Listening to Kafka topic: <strong>@Topic</strong>
+</p>
+
+<div class="mb-2">
+    <button class="btn btn-sm btn-primary" @onclick="StartIfNotRunning" disabled="@_running">Start</button>
+    <button class="btn btn-sm btn-warning" @onclick="Stop" disabled="@(!_running)">Stop</button>
+    <span class="ms-3">Status: @_status</span>
+</div>
+
+@if (_messages.Count == 0)
+{
+    <p><em>No messages yet.</em></p>
+}
+else
+{
+    <p>Total messages: @_messages.Count</p>
+    <table class="table table-sm table-striped">
+        <thead>
+            <tr>
+                <th style="width:25%">Key</th>
+                <th>Value</th>
+                <th style="width:180px">Received (UTC)</th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var m in _messages)
+        {
+            <tr>
+                <td>@m.Key</td>
+                <td>@m.Value</td>
+                <td>@m.TimestampUtc.ToString("O")</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
+
+@code {
+    private const string Topic = "orders";
+    private readonly List<ExtendedOrderMessage> _messages = new();
+    private readonly object _lock = new();
+    private CancellationTokenSource? _cts;
+    private bool _running;
+    private string _status = "Idle";
+
+    [Inject] private IConsumer Consumer { get; set; } = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Optionally auto-start
+        Start();
+        await Task.CompletedTask;
+    }
+
+    private void StartIfNotRunning()
+    {
+        if (!_running) Start();
+    }
+
+    private void Start()
+    {
+        _cts = new CancellationTokenSource();
+        _running = true;
+        _status = "Running";
+        // Run continuous consumption on a background thread to avoid blocking the renderer.
+        _ = Task.Run(() => Consumer.ConsumeAsync(Topic, HandleMessageAsync, _cts.Token));
+    }
+
+    private async Task HandleMessageAsync(OrderMessage msg)
+    {
+        var extended = new ExtendedOrderMessage
+        {
+            Key = msg.Key,
+            Value = msg.Value,
+            TimestampUtc = DateTime.UtcNow
+        };
+
+        lock (_lock)
+        {
+            _messages.Insert(0, extended);          // newest first
+            if (_messages.Count > 200)              // simple cap to avoid unbounded growth
+                _messages.RemoveAt(_messages.Count - 1);
+        }
+
+        // Notify UI from the correct context
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void Stop()
+    {
+        if (_cts != null && !_cts.IsCancellationRequested)
+        {
+            _cts.Cancel();
+        }
+        _running = false;
+        _status = "Stopped";
+    }
+
+    public void Dispose()
+    {
+        Stop();
+        _cts?.Dispose();
+    }
+
+    private class ExtendedOrderMessage : OrderMessage
+    {
+        public DateTime TimestampUtc { get; set; }
+    }
+}
