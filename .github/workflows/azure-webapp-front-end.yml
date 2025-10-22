@@ -1,4 +1,4 @@
-name: Build and deploy ASP.Net Core app to an Azure Web App
+name: Build and deploy ASP.Net Core Fornt end
 
 env:
   AZURE_WEBAPP_PACKAGE_PATH: './front_end'      # set this to the path to your web app project, defaults to the repository root
@@ -35,7 +35,7 @@ jobs:
         run: dotnet build --configuration Release
 
       - name: dotnet publish
-        run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/orders-kafka-front-end
+        run: dotnet publish ./OrdersKafkaClientApp/OrdersKafkaWebApp/OrdersKafkaWebApp.csproj -c Release -o ${{env.DOTNET_ROOT}}/orders-kafka-front-end
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4

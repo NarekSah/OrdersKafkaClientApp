@@ -35,7 +35,7 @@ jobs:
         run: dotnet build --configuration Release
 
       - name: dotnet publish
-        run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/orders-kafka-client-app
+        run: dotnet publish ./OrdersKafkaClientApp/OrdersKafkaClientApp/OrdersKafkaClientApp.csproj -c Release -o ${{env.DOTNET_ROOT}}/orders-kafka-client-app
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
