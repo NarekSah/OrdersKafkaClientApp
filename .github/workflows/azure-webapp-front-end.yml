@@ -37,10 +37,10 @@ jobs:
             find . -name "*.csproj" -type f
 
       - name: Build with dotnet
-        run: dotnet build ./OrdersKafkaWebApp.csproj --configuration Release
+        run: dotnet build ./OrdersKafkaWebApp/OrdersKafkaWebApp.csproj --configuration Release
 
       - name: dotnet publish
-        run: dotnet publish ./OrdersKafkaWebApp.csproj -c Release -o ${{env.DOTNET_ROOT}}/orders-kafka-front-end
+        run: dotnet publish ./OrdersKafkaWebApp/OrdersKafkaWebApp.csproj -c Release -o ${{env.DOTNET_ROOT}}/orders-kafka-front-end
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
