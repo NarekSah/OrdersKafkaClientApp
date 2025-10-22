@@ -1,5 +1,3 @@
-using OrdersKafkaClientApp;
-
 using OrdersKafkaWebApp.Components;
 
 namespace OrdersKafkaWebApp
