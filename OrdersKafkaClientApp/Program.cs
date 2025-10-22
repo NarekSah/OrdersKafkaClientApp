@@ -6,13 +6,12 @@ namespace OrdersKafkaClientApp
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            builder.Configuration
-                .SetBasePath(Directory.GetCurrentDirectory())
-                .AddIniFile("client.properties", optional: true, reloadOnChange: true);
+            //builder.Configuration
+            //    .SetBasePath(Directory.GetCurrentDirectory())
+            //    .AddIniFile("client.properties", optional: true, reloadOnChange: true);
 
             // Add services to the container.
-            builder.Services.AddScoped<IProducer, Producer>();
-            builder.Services.AddScoped<IConsumer, Consumer>();
+            builder.Services.AddScoped<IProducer, Producer>();           
 
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
