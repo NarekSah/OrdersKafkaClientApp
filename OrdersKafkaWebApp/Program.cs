@@ -4,6 +4,8 @@ namespace OrdersKafkaWebApp
 {
     public class Program
     {
+        
+       
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
@@ -13,7 +15,7 @@ namespace OrdersKafkaWebApp
                 .AddInteractiveServerComponents();
 
             // Kafka consumer service (from referenced project)
-            builder.Services.AddScoped<IConsumer, Consumer>();
+            builder.Services.AddSingleton<IConsumer, Consumer>();
 
             var app = builder.Build();
 

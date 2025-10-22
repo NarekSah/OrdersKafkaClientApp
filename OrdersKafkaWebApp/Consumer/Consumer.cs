@@ -1,10 +1,12 @@
-using Confluent.Kafka;
+﻿using Confluent.Kafka;
 
 namespace OrdersKafkaWebApp
 {
-    public class Consumer : IConsumer
+    public class Consumer : IConsumer, IDisposable
     {
         private readonly IConfiguration _config;
+        private IConsumer<string, string>? _consumer;
+        private readonly object _lock = new object();
 
         public Consumer(IConfiguration config)
         {
@@ -13,105 +15,94 @@ namespace OrdersKafkaWebApp
 
         public async Task<OrderMessage?> ConsumeAsync(string topic, CancellationToken cancellationToken = default)
         {
-            // Get Kafka configuration section
-            var kafkaConfig = new ConsumerConfig();
-            _config.GetSection("Kafka").Bind(kafkaConfig);
-            
-            // Set required consumer properties if not already configured
-            if (string.IsNullOrEmpty(kafkaConfig.GroupId))
-            {
-                kafkaConfig.GroupId = "orders-consumer-group";
-            }
-            if (kafkaConfig.AutoOffsetReset == null)
-            {
-                kafkaConfig.AutoOffsetReset = AutoOffsetReset.Earliest;
-            }
+            var consumer = GetOrCreateConsumer();
 
-            // creates a new consumer instance
-            using (var consumer = new ConsumerBuilder<string, string>(kafkaConfig).Build())
+            try
             {
-                try
+                var consumeResult = consumer.Consume(cancellationToken);
+
+                if (consumeResult?.Message != null)
                 {
-                    consumer.Subscribe(topic);
-                    
-                    var consumeResult = consumer.Consume(cancellationToken);
-                    
-                    if (consumeResult?.Message != null)
+                    Console.WriteLine($"Consumed event from topic {topic}: key = {consumeResult.Message.Key,-10} value = {consumeResult.Message.Value}");
+
+                    return new OrderMessage
                     {
-                        Console.WriteLine($"Consumed event from topic {topic}: key = {consumeResult.Message.Key,-10} value = {consumeResult.Message.Value}");
-                        
-                        return new OrderMessage 
-                        { 
-                            Key = consumeResult.Message.Key, 
-                            Value = consumeResult.Message.Value 
-                        };
-                    }
-                    
-                    return null;
+                        Key = consumeResult.Message.Key,
+                        Value = consumeResult.Message.Value
+                    };
                 }
-                catch (ConsumeException e)
-                {
-                    Console.WriteLine($"Failed to consume message: {e.Error.Reason}");
-                    throw;
-                }
-                finally
-                {
-                    consumer.Close();
-                }
+
+                return null;
+            }
+            catch (ConsumeException e)
+            {
+                Console.WriteLine($"Failed to consume message: {e.Error.Reason}");
+                throw;
             }
         }
 
         public async Task ConsumeAsync(string topic, Func<OrderMessage, Task> messageHandler, CancellationToken cancellationToken = default)
         {
-            // Get Kafka configuration section
-            var kafkaConfig = new ConsumerConfig();
-            _config.GetSection("Kafka").Bind(kafkaConfig);
-            
-            // Set required consumer properties if not already configured
-            if (string.IsNullOrEmpty(kafkaConfig.GroupId))
-            {
-                kafkaConfig.GroupId = "orders-consumer-group";
-            }
-            if (kafkaConfig.AutoOffsetReset == null)
-            {
-                kafkaConfig.AutoOffsetReset = AutoOffsetReset.Earliest;
-            }
+            var consumer = GetOrCreateConsumer();
+            consumer.Subscribe(topic);
 
-            // creates a new consumer instance
-            using (var consumer = new ConsumerBuilder<string, string>(kafkaConfig).Build())
+            try
             {
-                try
+                while (!cancellationToken.IsCancellationRequested)
                 {
-                    consumer.Subscribe(topic);
-                    
-                    while (!cancellationToken.IsCancellationRequested)
+                    var consumeResult = consumer.Consume(TimeSpan.FromMilliseconds(100));
+
+                    if (consumeResult?.Message != null)
                     {
-                        var consumeResult = consumer.Consume(cancellationToken);
-                        
-                        if (consumeResult?.Message != null)
+                        Console.WriteLine($"Consumed event from topic {topic}: key = {consumeResult.Message.Key,-10} value = {consumeResult.Message.Value}");
+
+                        var orderMessage = new OrderMessage
                         {
-                            Console.WriteLine($"Consumed event from topic {topic}: key = {consumeResult.Message.Key,-10} value = {consumeResult.Message.Value}");
-                            
-                            var orderMessage = new OrderMessage 
-                            { 
-                                Key = consumeResult.Message.Key, 
-                                Value = consumeResult.Message.Value 
-                            };
-                            
-                            await messageHandler(orderMessage);
-                        }
+                            Key = consumeResult.Message.Key,
+                            Value = consumeResult.Message.Value
+                        };
+
+                        await messageHandler(orderMessage);
                     }
                 }
-                catch (ConsumeException e)
-                {
-                    Console.WriteLine($"Failed to consume message: {e.Error.Reason}");
-                    throw;
-                }
-                finally
-                {
-                    consumer.Close();
-                }
             }
+            catch (ConsumeException e)
+            {
+                Console.WriteLine($"Failed to consume message: {e.Error.Reason}");
+                throw;
+            }
+        }
+
+        private IConsumer<string, string> GetOrCreateConsumer()
+        {
+            lock (_lock)
+            {
+                if (_consumer == null)
+                {
+                    var kafkaConfig = new ConsumerConfig();
+                    _config.GetSection("Kafka").Bind(kafkaConfig);
+
+                    // Set required consumer properties
+                    if (string.IsNullOrEmpty(kafkaConfig.GroupId))
+                    {
+                        kafkaConfig.GroupId = $"orders-consumer-group-{Guid.NewGuid()}";
+                    }
+                    if (kafkaConfig.AutoOffsetReset == null)
+                    {
+                        kafkaConfig.AutoOffsetReset = AutoOffsetReset.Latest;
+                    }
+
+                    _consumer = new ConsumerBuilder<string, string>(kafkaConfig).Build();
+                }
+
+                return _consumer;
+            }
+        }
+
+        public void Dispose()
+        {
+            _consumer?.Close();
+            _consumer?.Dispose();
         }
     }
 }
