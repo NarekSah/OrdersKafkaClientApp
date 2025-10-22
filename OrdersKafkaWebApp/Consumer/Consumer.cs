@@ -5,17 +5,20 @@ namespace OrdersKafkaWebApp
     public class Consumer : IConsumer, IDisposable
     {
         private readonly IConfiguration _config;
+        private readonly ILogger<Consumer> _logger;
         private IConsumer<string, string>? _consumer;
         private readonly object _lock = new object();
 
-        public Consumer(IConfiguration config)
+        public Consumer(IConfiguration config, ILogger<Consumer> logger)
         {
             _config = config;
+            _logger = logger;
         }
 
         public async Task<OrderMessage?> ConsumeAsync(string topic, CancellationToken cancellationToken = default)
         {
             var consumer = GetOrCreateConsumer();
+            consumer.Subscribe(topic);
 
             try
             {
@@ -23,7 +26,7 @@ namespace OrdersKafkaWebApp
 
                 if (consumeResult?.Message != null)
                 {
-                    Console.WriteLine($"Consumed event from topic {topic}: key = {consumeResult.Message.Key,-10} value = {consumeResult.Message.Value}");
+                    _logger.LogInformation($"Consumed event from topic {topic}: key = {consumeResult.Message.Key}, value = {consumeResult.Message.Value}");
 
                     return new OrderMessage
                     {
@@ -36,7 +39,7 @@ namespace OrdersKafkaWebApp
             }
             catch (ConsumeException e)
             {
-                Console.WriteLine($"Failed to consume message: {e.Error.Reason}");
+                _logger.LogError($"Failed to consume message: {e.Error.Reason}");
                 throw;
             }
         }
@@ -44,31 +47,49 @@ namespace OrdersKafkaWebApp
         public async Task ConsumeAsync(string topic, Func<OrderMessage, Task> messageHandler, CancellationToken cancellationToken = default)
         {
             var consumer = GetOrCreateConsumer();
+
+            _logger.LogInformation($"Subscribing to topic: {topic}");
             consumer.Subscribe(topic);
 
             try
             {
                 while (!cancellationToken.IsCancellationRequested)
                 {
-                    var consumeResult = consumer.Consume(TimeSpan.FromMilliseconds(100));
-
-                    if (consumeResult?.Message != null)
+                    try
                     {
-                        Console.WriteLine($"Consumed event from topic {topic}: key = {consumeResult.Message.Key,-10} value = {consumeResult.Message.Value}");
+                        var consumeResult = consumer.Consume(TimeSpan.FromMilliseconds(1000)); // Increased timeout
 
-                        var orderMessage = new OrderMessage
+                        if (consumeResult?.Message != null)
                         {
-                            Key = consumeResult.Message.Key,
-                            Value = consumeResult.Message.Value
-                        };
+                            _logger.LogInformation($"Consumed event from topic {topic}: key = {consumeResult.Message.Key}, value = {consumeResult.Message.Value}");
 
-                        await messageHandler(orderMessage);
+                            var orderMessage = new OrderMessage
+                            {
+                                Key = consumeResult.Message.Key,
+                                Value = consumeResult.Message.Value
+                            };
+
+                            await messageHandler(orderMessage);
+                        }
+                        else
+                        {
+                            // Log periodically when no messages
+                            if (DateTime.Now.Second % 10 == 0) // Every 10 seconds
+                            {
+                                _logger.LogDebug($"No messages received from topic {topic}");
+                            }
+                        }
+                    }
+                    catch (ConsumeException e)
+                    {
+                        _logger.LogError($"Consume error: {e.Error.Reason}");
+                        // Continue consuming even on errors
                     }
                 }
             }
-            catch (ConsumeException e)
+            catch (Exception e)
             {
-                Console.WriteLine($"Failed to consume message: {e.Error.Reason}");
+                _logger.LogError(e, $"Fatal error in consumer for topic {topic}");
                 throw;
             }
         }
@@ -85,14 +106,27 @@ namespace OrdersKafkaWebApp
                     // Set required consumer properties
                     if (string.IsNullOrEmpty(kafkaConfig.GroupId))
                     {
-                        kafkaConfig.GroupId = $"orders-consumer-group-{Guid.NewGuid()}";
-                    }
-                    if (kafkaConfig.AutoOffsetReset == null)
-                    {
-                        kafkaConfig.AutoOffsetReset = AutoOffsetReset.Latest;
+                        kafkaConfig.GroupId = $"orders-consumer-group-{Environment.MachineName}-{Guid.NewGuid().ToString("N")[..8]}";
                     }
 
-                    _consumer = new ConsumerBuilder<string, string>(kafkaConfig).Build();
+                    // Change to Earliest to see existing messages
+                    kafkaConfig.AutoOffsetReset = AutoOffsetReset.Earliest;
+
+                    // Add debugging configuration
+                    kafkaConfig.EnableAutoCommit = true;
+                    kafkaConfig.AutoCommitIntervalMs = 5000;
+                    kafkaConfig.SessionTimeoutMs = 30000;
+                    kafkaConfig.HeartbeatIntervalMs = 3000;
+
+                    _logger.LogInformation($"Creating Kafka consumer with GroupId: {kafkaConfig.GroupId}");
+                    _logger.LogInformation($"Bootstrap servers: {kafkaConfig.BootstrapServers}");
+
+                    _consumer = new ConsumerBuilder<string, string>(kafkaConfig)
+                        .SetErrorHandler((_, e) => _logger.LogError($"Kafka error: {e.Reason}"))
+                        .SetStatisticsHandler((_, json) => _logger.LogDebug($"Kafka stats: {json}"))
+                        .Build();
+
+                    _logger.LogInformation("Kafka consumer created successfully");
                 }
 
                 return _consumer;
@@ -101,6 +135,7 @@ namespace OrdersKafkaWebApp
 
         public void Dispose()
         {
+            _logger.LogInformation("Disposing Kafka consumer");
             _consumer?.Close();
             _consumer?.Dispose();
         }

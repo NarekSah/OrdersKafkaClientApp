@@ -43,6 +43,14 @@ else
     </table>
 }
 
+<div class="alert alert-info">
+    <h5>Debug Info:</h5>
+    <p>Consumer Status: @_status</p>
+    <p>Running: @_running</p>
+    <p>Messages Count: @_messages.Count</p>
+    <p>Last Check: @DateTime.Now.ToString("HH:mm:ss")</p>
+</div>
+
 @code {
     private const string Topic = "orders";
     private readonly List<ExtendedOrderMessage> _messages = new();
