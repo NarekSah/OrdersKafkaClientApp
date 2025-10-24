@@ -86,6 +86,7 @@ namespace OrdersKafkaWebApp
                         // Continue consuming even on errors
                     }
                 }
+                consumer.Close();
             }
             catch (Exception e)
             {
