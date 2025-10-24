@@ -13,6 +13,8 @@ namespace OrdersKafkaWebApp
             // Add Application Insights
             builder.Services.AddApplicationInsightsTelemetry();
 
+            builder.Services.Configure<KafkaSettings>(builder.Configuration.GetSection("Kafka"));
+
             // Configure Serilog with Application Insights
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Information()
@@ -32,7 +34,11 @@ namespace OrdersKafkaWebApp
 
             // Add services to the container.
             builder.Host.UseSerilog();
-            
+
+            // SignalR + Background consumer
+            builder.Services.AddSignalR();
+            builder.Services.AddHostedService<KafkaConsumerService>();
+
             builder.Services.AddRazorComponents()
                 .AddInteractiveServerComponents();
 
@@ -60,9 +66,19 @@ namespace OrdersKafkaWebApp
             app.UseHttpsRedirection();
             app.UseStaticFiles();
             app.UseAntiforgery();
+            
+
+            app.MapHub<MessageHub>("/hub");
+
 
             app.MapRazorComponents<App>()
                 .AddInteractiveServerRenderMode();
+
+            app.MapGet("/viewer", async context =>
+            {
+                context.Response.ContentType = "text/html";
+                await context.Response.SendFileAsync("views/index.html");
+            });
 
             logger.LogInformation("Application configuration completed, starting web host");
             app.Run();

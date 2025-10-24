@@ -96,9 +96,7 @@ namespace OrdersKafkaWebApp
         }
 
         private IConsumer<string, string> GetOrCreateConsumer()
-        {
-            lock (_lock)
-            {
+        {            
                 if (_consumer == null)
                 {
                     var kafkaConfig = new ConsumerConfig();
@@ -113,12 +111,6 @@ namespace OrdersKafkaWebApp
                     // Change to Earliest to see existing messages
                     kafkaConfig.AutoOffsetReset = AutoOffsetReset.Earliest;
 
-                    // Add debugging configuration
-                    kafkaConfig.EnableAutoCommit = true;
-                    kafkaConfig.AutoCommitIntervalMs = 5000;
-                    kafkaConfig.SessionTimeoutMs = 30000;
-                    kafkaConfig.HeartbeatIntervalMs = 3000;
-
                     _logger.LogInformation($"Creating Kafka consumer with GroupId: {kafkaConfig.GroupId}");
                     _logger.LogInformation($"Bootstrap servers: {kafkaConfig.BootstrapServers}");
 
@@ -130,8 +122,7 @@ namespace OrdersKafkaWebApp
                     _logger.LogInformation("Kafka consumer created successfully");
                 }
 
-                return _consumer;
-            }
+                return _consumer;            
         }
 
         public void Dispose()

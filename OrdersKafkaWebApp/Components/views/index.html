@@ -1,0 +1,86 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Kafka Message Stream</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+            margin: 20px;
+        }
+
+        h1 {
+            margin-bottom: 0.25rem;
+        }
+
+        #status {
+            font-size: 0.9rem;
+            opacity: 0.75;
+            margin-bottom: 1rem;
+        }
+
+        #messages {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .msg {
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            background: #fafafa;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+    </style>
+</head>
+<body>
+    <h1>Kafka Topic Stream</h1>
+    <div id="status">Connecting…</div>
+
+    <div id="messages"></div>
+
+    <!-- SignalR client (use a recent version that matches your runtime, 8.x for .NET 8) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js" integrity="sha512-+r6g7V4t8yGZJ2n3k4d5qCwV1iWQ7J7k6qE8bG8uK8FQn5z8Ww8sYt3eJxjWdsq6L7Jr0F7v1yJw6y4b2Wc0rA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+    <script>
+    const statusEl = document.getElementById('status');
+    const listEl = document.getElementById('messages');
+
+    function addMessage(text) {
+      const div = document.createElement('div');
+      div.className = 'msg';
+      div.textContent = text ?? '(null)';
+      listEl.prepend(div); // newest on top
+    }
+
+    async function start() {
+      const connection = new signalR.HubConnectionBuilder()
+        .withUrl('/hub')
+        .withAutomaticReconnect()
+        .build();
+
+      connection.on('message', (msg) => {
+        addMessage(msg);
+      });
+
+      connection.onreconnecting(() => statusEl.textContent = 'Reconnecting…');
+      connection.onreconnected(() => statusEl.textContent = 'Connected');
+      connection.onclose(() => statusEl.textContent = 'Disconnected');
+
+      try {
+        await connection.start();
+        statusEl.textContent = 'Connected';
+      } catch (err) {
+        console.error(err);
+        statusEl.textContent = 'Failed to connect';
+        setTimeout(start, 2000);
+      }
+    }
+
+    start();
+    </script>
+</body>
+</html>
