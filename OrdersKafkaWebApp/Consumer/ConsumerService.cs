@@ -23,6 +23,13 @@ public class KafkaConsumerService : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+
+        if(string.IsNullOrEmpty(_settings.SaslUsername) || string.IsNullOrEmpty(_settings.SaslPassword))
+        {
+            _logger.LogError("Kafka SASL username or password is not set. Please check your configuration.");
+            return;
+        }
+
         var conf = new ConsumerConfig
         {
             BootstrapServers = _settings?.BootstrapServers,

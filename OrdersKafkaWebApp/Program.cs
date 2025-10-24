@@ -64,12 +64,9 @@ namespace OrdersKafkaWebApp
             }
 
             app.UseHttpsRedirection();
-            app.UseStaticFiles();
-            app.UseAntiforgery();
-            
+            app.UseStaticFiles();            
 
             app.MapHub<MessageHub>("/hub");
-
 
             app.MapRazorComponents<App>()
                 .AddInteractiveServerRenderMode();
