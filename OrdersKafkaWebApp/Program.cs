@@ -64,7 +64,8 @@ namespace OrdersKafkaWebApp
             }
 
             app.UseHttpsRedirection();
-            app.UseStaticFiles();            
+            app.UseStaticFiles();
+            
 
             app.MapHub<MessageHub>("/hub");
 
@@ -76,7 +77,7 @@ namespace OrdersKafkaWebApp
                 context.Response.ContentType = "text/html";
                 await context.Response.SendFileAsync("views/index.html");
             });
-
+            app.UseAntiforgery();
             logger.LogInformation("Application configuration completed, starting web host");
             app.Run();
         }
