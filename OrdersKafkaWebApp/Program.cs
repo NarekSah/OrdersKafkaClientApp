@@ -75,7 +75,7 @@ namespace OrdersKafkaWebApp
             app.MapGet("/viewer", async context =>
             {
                 context.Response.ContentType = "text/html";
-                await context.Response.SendFileAsync("views/index.html");
+                await context.Response.SendFileAsync("wwwroot/index.html");
             });
             app.UseAntiforgery();
             logger.LogInformation("Application configuration completed, starting web host");
