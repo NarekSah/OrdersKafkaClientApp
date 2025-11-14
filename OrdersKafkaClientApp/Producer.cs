@@ -15,7 +15,7 @@ namespace OrdersKafkaClientApp
         {
             // Get Kafka configuration section
             var kafkaConfig = new ProducerConfig();
-            _config.GetSection("Kafka").Bind(kafkaConfig);
+            _config.GetSection("Producer").Bind(kafkaConfig);
             
             // creates a new producer instance
             using (var producer = new ProducerBuilder<string, string>(kafkaConfig).Build())
