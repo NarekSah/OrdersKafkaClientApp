@@ -31,7 +31,8 @@ namespace SimpleKafkaWeb.Services
                 SecurityProtocol = Enum.Parse<SecurityProtocol>(_settings.SecurityProtocol, ignoreCase: true),
                 SaslMechanism = Enum.Parse<SaslMechanism>(_settings.SaslMechanism, ignoreCase: true),
                 SaslUsername = _settings.SaslUsername,
-                SaslPassword = _settings.SaslPassword
+                SaslPassword = _settings.SaslPassword,
+                ClientId = _settings.ClientId
             };
 
             using var consumer = new ConsumerBuilder<Ignore, string>(config).Build();
@@ -80,5 +81,6 @@ namespace SimpleKafkaWeb.Services
         public string SaslMechanism { get; set; } = "Plain";
         public string GroupId { get; set; } = "simple-web-consumer";
         public string Topic { get; set; } = "";
+        public string ClientId { get; set; } = "OrdersKafkaWebApp";
     }
 }
