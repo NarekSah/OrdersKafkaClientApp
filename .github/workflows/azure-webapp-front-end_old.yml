@@ -1,0 +1,74 @@
+# name: Build and deploy ASP.Net Core Fornt end
+
+# env:
+#   AZURE_WEBAPP_PACKAGE_PATH: './OrdersKafkaWebApp'   # set this to the path to your web app project, defaults to the repository root
+
+# on:
+#   push:
+#     branches: [ "master" ]
+#   workflow_dispatch:
+
+# permissions:
+#   contents: read
+
+# jobs:
+#   build:
+#     runs-on: ubuntu-latest
+
+#     steps:
+#       - uses: actions/checkout@v4
+
+#       - name: Set up .NET Core
+#         uses: actions/setup-dotnet@v4
+#         with:
+#           dotnet-version: '8.x'
+
+#       - name: Set up dependency caching for faster builds
+#         uses: actions/cache@v3
+#         with:
+#           path: ~/.nuget/packages
+#           key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
+#           restore-keys: |
+#             ${{ runner.os }}-nuget-
+
+#       - name: List repository contents
+#         run: |
+#             ls -la
+#             find . -name "*.csproj" -type f
+
+#       - name: Build with dotnet
+#         run: dotnet build ./OrdersKafkaWebApp/OrdersKafkaWebApp.csproj --configuration Release
+
+#       - name: dotnet publish
+#         run: dotnet publish ./OrdersKafkaWebApp/OrdersKafkaWebApp.csproj -c Release -o ${{env.DOTNET_ROOT}}/orders-kafka-front-end
+
+#       - name: Upload artifact for deployment job
+#         uses: actions/upload-artifact@v4
+#         with:
+#           name: published-app
+#           path: ${{env.DOTNET_ROOT}}/orders-kafka-front-end
+
+#   deploy:
+#     permissions:
+#       contents: none
+#     runs-on: ubuntu-latest
+#     needs: build
+#     environment:
+#       name: 'Development'
+#       url: ${{ steps.deploy-to-webapp-front-end.outputs.webapp-url }}
+
+#     steps:
+#       - name: Download artifact from build job
+#         uses: actions/download-artifact@v4
+#         with:
+#           name: published-app
+#           path: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
+
+#       - name: Deploy to Azure Web App Front End
+#         id: deploy-to-webapp-front-end
+#         uses: azure/webapps-deploy@v2
+#         with:
+#           app-name: ${{ env.AZURE_WEBAPP_FRONTEND_NAME }}
+#           publish-profile: ${{ secrets.AZURE_WEBAPP_FRONTEND_PUBLISH_PROFILE }}
+#           package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
+

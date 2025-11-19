@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OrdersKafkaClientApp", "Ord
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OrdersKafkaWebApp", "OrdersKafkaWebApp\OrdersKafkaWebApp.csproj", "{EDDD031D-3A2F-48DE-B753-C9E44464DFBE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleKafkaWeb", "SimpleKafkaWeb\SimpleKafkaWeb.csproj", "{206F7C69-1DC5-EDB6-5A30-0B9A02A14D11}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{EDDD031D-3A2F-48DE-B753-C9E44464DFBE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EDDD031D-3A2F-48DE-B753-C9E44464DFBE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EDDD031D-3A2F-48DE-B753-C9E44464DFBE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{206F7C69-1DC5-EDB6-5A30-0B9A02A14D11}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{206F7C69-1DC5-EDB6-5A30-0B9A02A14D11}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{206F7C69-1DC5-EDB6-5A30-0B9A02A14D11}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{206F7C69-1DC5-EDB6-5A30-0B9A02A14D11}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,0 +1,24 @@
+﻿@page
+@model SimpleKafkaWeb.Pages.IndexModel
+
+<h1>Kafka Messages from Confluent Cloud</h1>
+
+<p>This page shows the latest messages from the configured topic.</p>
+
+@if (Model.Messages.Count == 0)
+{
+    <p><em>No messages received yet.</em></p>
+}
+else
+{
+    <ul>
+        @foreach (var msg in Model.Messages)
+        {
+            <li>@msg</li>
+        }
+    </ul>
+}
+
+<form method="get">
+    <button type="submit">Refresh</button>
+</form>
