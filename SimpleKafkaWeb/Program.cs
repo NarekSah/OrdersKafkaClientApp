@@ -13,7 +13,7 @@ builder.Services.Configure<KafkaSettings>(
 builder.Services.AddSingleton<MessageStore>();
 
 // Register background Kafka consumer
-builder.Services.AddHostedService<KafkaConsumerService>();
+//builder.Services.AddHostedService<KafkaConsumerService>();
 
 var app = builder.Build();
 
